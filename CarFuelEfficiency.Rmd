@@ -19,6 +19,7 @@ Questions:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(AppliedPredictiveModeling)
+library(dplyr)
 ```
 
 data set: fuel economy from US Gov't website
@@ -58,6 +59,30 @@ between = list(x = 1.2))
 names(cars2010a)
 ```
 
+
+Try transmissions = AV, AM6, and AM7
+```{r}
+testTranny = filter(cars2010a, Transmission %in% c('AV', 'AM7'))
+trannyModel = glm(FE ~ Transmission, data = testTranny)
+summary(trannyModel)
+print(mean(testTranny$FE))
+
+```
+Try adding air aspiration method to see what it does
+
+```{r}
+#levels(cars2010a$AirAspirationMethod)
+levels(cars2010a$AirAspirationMethod)
+trannyAirModel = glm(FE ~ Transmission + AirAspirationMethod, data = testTranny)
+summary(trannyAirModel)
+```
+
+```{r}
+for (i in 1:length(cars2010a$IntakeValvePerCyl)){
+    if (cars2010a$IntakeValvePerCyl[i] == 0) print('Found one')
+}
+
+```
 
 ### regession fit
 
