@@ -1,6 +1,6 @@
 ---
 title: "regression problem"
-author: "dr. J"
+author: "Nadezda Carr"
 date: "2/16/2020"
 output: html_document
 ---
@@ -11,7 +11,7 @@ This is a problem in modeling/prediction.
 The idea is this:  Fuel efficiency from 2010 and 2011 passenger cars and light trucks is provied.  Using data from 2010, find the best model to predict fuel effiency; fit the model using data from 2010, and evaluate model performance using 2011 data.  
 
 Questions:  
-1. Is there evidence of an improvement in fuel efficiency from 2010 t 2011?  
+1. Is there evidence of an improvement in fuel efficiency from 2010 to 2011?  
 2. What variables are most significant predictors of fuel efficienty?  
 3. Suggest ways in which fuel efficienty could be improved in future years.  
 
@@ -57,13 +57,21 @@ between = list(x = 1.2))
 $H_0$: no difference between FE in 2010 and 2011
 $H_A$: there is a difference in FE for years 2010 and 2011
 
-We'll use the t-tesr for thus inference:
+We'll use the t-test for this inference:
 ```{r}
 t.test(cars2010a$FE, cars2011a$FE)
 ```
 Question #1:
 No evidence of any improvement/difference in mean FE between 2010 and 2011
 
+As an aside, is there a diference between average fuel efficiency in 2010 and 2012?
+
+```{r}
+t.test(cars2010a$FE, cars2012$FE)
+par(mrow=2)
+hist(cars2010a$FE)
+hist(cars2012$FE)
+```
 
 ### variables in the data set:
 
@@ -80,6 +88,16 @@ summary(trannyModel)
 print(mean(testTranny$FE))
 
 ```
+Try adding Exhaust Valves per Cylinder
+
+```{r}
+#levels(cars2010a$ExhaustValvesPerCyl)
+levels(cars2010a$ExhaustValvesPerCyl)
+trannyValveModel = glm(FE ~ Transmission + ExhaustValvesPerCyl, data = testTranny)
+summary(trannyValveModel)
+```
+
+
 Try adding air aspiration method to see what it does
 
 ```{r}
@@ -95,68 +113,45 @@ for (i in 1:length(cars2010a$IntakeValvePerCyl)){
 }
 
 ```
-
-### regession fit
+### ANOVA
 
 ```{r}
-model1 = glm(FE~ EngDispl, data=cars2010a)
+model1 = glm(FE~EngDispl+
+              NumCyl +
+              AirAspirationMethod +
+              TransCreeperGear +
+              DriveDesc
+            ,data=cars2010a)
 summary(model1)
-plot(cars2010a$EngDispl, cars2010a$FE, xlab = 'Engine Displacement, L', ylab = 'Fuel Efficiency, MPG')
-abline(model1, col='red')
+anova(model1)
+
+
 ```
-
-### how does this fit model year 2011?
+It appears that TransCreeperGear is a drag. Leave it out. 
+Drive desc: front two wheel
 ```{r}
-plot(cars2011a$EngDispl, cars2011a$FE, xlab = 'Engine Displacement,L',ylab='MPG')
-x = cars2011a$EngDispl
-y = model1$coefficients[1] + model1$coefficients[2]*x
-lines(x,y, col='red')
-```
-
-
-
-may benefit from a second order term
-
-```{r}
-model2 = glm(FE~ EngDispl + I(EngDispl^2), data = cars2010a)
-
+pruned2010a = filter(cars2010a, TransCreeperGear==0 & DriveDesc=='TwoWheelDriveFront' &  EngDispl < 3)
+model2 = lm(FE~EngDispl
+             , data=pruned2010a)
 summary(model2)
+
+anova(model2)
 ```
 
-### include transmission in the equation:
+make a prediction for 2011 cars
 
 ```{r}
-levels(cars2010a$Transmission)
-model3 = glm(FE~ EngDispl+Transmission, data = cars2010a)
-summary(model3)
-
+pred2011 = predict(model2, cars2011)
+#print(pred2011)
+hist(pred2011)
+boxplot(pred2011, main='data from 2011/nmodel11')
 ```
-
-
-
-### predictions
-```{r}
-plot(cars2011a$EngDispl, cars2011a$FE, ylab='MPG', xlab='Engine displacement, L')
-newData = cars2011a
-y = predict(model3, newdata = cars2011a)
-
-lines(cars2011a$EngDispl,y, col='grey')
-
-#fit a smooth line to y then plot
-ySmooth= glm(y~cars2011a$EngDispl)
-summary(ySmooth)
-abline(ySmooth, col='red')
-
-```
-
-Transmission effects ??
+## Compare average fuel efficiency for 2011 cars using model1 compared to fuel efficiency for all cars in 2010
 
 ```{r}
-
-model3AOV = aov(cars2010a$FE~cars2010a$Transmission)
-summary(model3AOV)
-TukeyHSD(model3AOV)
+t.test(cars2011a$FE, pred2011)
 ```
 
+## Include other values in ANOVa
 
 
