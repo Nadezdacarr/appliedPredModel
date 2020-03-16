@@ -152,6 +152,28 @@ boxplot(pred2011, main='data from 2011/nmodel11')
 t.test(cars2011a$FE, pred2011)
 ```
 
-## Include other values in ANOVa
+## What do we do to improve fuel economy?
+
+```{r}
+
+model3 = lm(FE~DriveDesc
+             , data=cars2010a)
+summary(model3)
+
+anova(model3)
+
+```
+
+According to the ANOVA analysis, front wheel drive cars have the best fuel efficiency, while part time 4 wheel drive have the worst. We should drive front wheel drive cars to improve fuel economy.
+
+Applying Model3 to 2011 cars:
+
+```{r}
+pred2011a = predict(model3, cars2011)
+#print(pred2011a)
+hist(pred2011a)
+boxplot(pred2011a, main='data from 2011/model3')
+```
+
 
 
